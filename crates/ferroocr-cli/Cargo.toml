@@ -10,6 +10,7 @@ name = "ferroocr"
 path = "src/main.rs"
 
 [dependencies]
-# 唯一接触上游的地方在 src/engine.rs。M0 阶段用本地克隆的路径依赖（离线可复现）；
-# 发布前改为 git tag 锁定：{ git = "https://github.com/byrizki/rusto-rs", tag = "v0.4.1" }
+# 唯一接触上游的地方在 src/engine.rs。M0 阶段用本地克隆的路径依赖（离线可复现）。
+# 发布前改为 git 依赖锁定：上游目前没有打任何 tag，所以必须用 rev 而不是 tag。
+#   rusto-rs = { git = "https://github.com/byrizki/rusto-rs", rev = "731c3f44a5a60b8b66211d287a48884f8af88c2b", default-features = false, features = ["parallel"] }
 rusto-rs = { path = "../../spike/upstream", default-features = false, features = ["parallel"] }

@@ -11,7 +11,7 @@
 | 决策记录 | [docs/adr/](adr/README.md) —— 五条关键决策的背景、备选方案与代价，比 PRD 更适合了解「为什么这么定」 |
 | 上一版 | v1.2（单包 + 启动参数 + L2 默认开），已归档到 [archive/PRD-v1.2-单包与默认开HTTP.md](archive/PRD-v1.2-单包与默认开HTTP.md) |
 | 更早 | v1.1 [archive/PRD-v1.1-四级接入阶梯.md](archive/PRD-v1.1-四级接入阶梯.md)、v1.0 [archive/PRD-v1.0-NamedPipe单通道.md](archive/PRD-v1.0-NamedPipe单通道.md)、v0.5 [archive/PRD-v0.5-服务化定位.md](archive/PRD-v0.5-服务化定位.md) |
-| 上游基础 | [byrizki/rusto-rs](https://github.com/byrizki/rusto-rs) v0.4.0（MIT） |
+| 上游基础 | [byrizki/rusto-rs](https://github.com/byrizki/rusto-rs)（MIT），锁定 rev `731c3f44a5a6`，包内版本 0.4.1 |
 | 目标平台 | **Windows x86-64（唯一）** |
 | 调研文档 | [rusto-rs 技术分析](../research/01-rusto-rs-技术分析.md)、[竞品与生态调研](../research/02-竞品与生态调研.md) |
 
@@ -122,7 +122,7 @@ ferroocr.exe —— 唯一的发行物，一个包内含全部能力
 | C3 | 上游 GPU 只加速 **GEMM**，`conv.rs`/`depthwise.rs` 零分派 | 自研 GPU 路线拿不到 2×，**必须换 ORT** | `kernels/gemm/mod.rs:38`；`conv.rs` 中 `active_backend` 出现 0 次 |
 | C4 | 上游下载器**调外部 `curl`/`wget`** | 不能依赖它；**模型必须内置** | `src/download.rs:11,26,46` `Command::new` |
 | C5 | 上游 release profile 是 `opt-level="z"` + `panic="abort"` | 必须覆盖为 `opt-level=3` + `unwind` | `Cargo.toml:117,121` |
-| C6 | 上游在 crates.io 只到 **0.3.2**，仓库已 v0.4.0；`rusto-nn-cuda` **未发布** | 必须 git/vendor 依赖 | crates.io API |
+| C6 | 上游在 crates.io 只到 **0.3.2**，仓库已到 0.4.1 且**没有任何 git tag**；`rusto-nn-cuda` **未发布** | 必须用 git 依赖并锁 rev（不能锁 tag） | crates.io API + `git tag` |
 | C7 | ORT 的 `DirectML` EP **只需随包带 dylib，用户零安装** | GPU 引擎可做到"不装 CUDA"，且与 CPU 引擎共存于同一个 exe | `ort` 文档 `execution-providers.mdx:205` |
 | C8 | ORT 的 EP **可链式注册并逐算子回退到 CPU** | 天然实现"有 GPU 用 GPU、没有就 CPU" | 同上 |
 
@@ -517,7 +517,7 @@ ferroocr/
 | **并发模型** | 监听线程（L3）/ HTTP 线程（L2）+ 引擎池 | OCR 是阻塞计算，不用 async |
 | **GPU** | `ort 2.0.0-rc.15` + `directml` feature（编进同一个 exe，`--device gpu` 启用） | 成熟 kernel + 零安装 |
 | **构建 profile** | `opt-level=3`、`lto="fat"`、`strip=true`、`panic="unwind"`、`+crt-static` | 覆盖上游的 `"z"`/`abort`（C5） |
-| **依赖锁定** | `git = "https://github.com/byrizki/rusto-rs", tag = "v0.4.0"` | crates.io 只到 0.3.2（C6） |
+| **依赖锁定** | `git = "https://github.com/byrizki/rusto-rs", rev = "731c3f44a5a60b8b66211d287a48884f8af88c2b"` | **上游没有打任何 tag**，只能用 rev 锁定；crates.io 只到 0.3.2（C6） |
 
 ### 7.3 自动拉起时序
 
