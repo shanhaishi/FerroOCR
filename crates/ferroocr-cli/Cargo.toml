@@ -1,0 +1,15 @@
+[package]
+name = "ferroocr-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FerroOCR 命令行入口与一次性识别（L0/L1）"
+
+[[bin]]
+name = "ferroocr"
+path = "src/main.rs"
+
+[dependencies]
+# 唯一接触上游的地方在 src/engine.rs。M0 阶段用本地克隆的路径依赖（离线可复现）；
+# 发布前改为 git tag 锁定：{ git = "https://github.com/byrizki/rusto-rs", tag = "v0.4.1" }
+rusto-rs = { path = "../../spike/upstream", default-features = false, features = ["parallel"] }

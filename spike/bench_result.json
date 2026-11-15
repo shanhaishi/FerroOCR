@@ -1,0 +1,30 @@
+[
+  {
+    "image": "example1.png",
+    "lines": 48,
+    "min": 0.609,
+    "median": 0.619,
+    "max": 0.633
+  },
+  {
+    "image": "invoice1.jpg",
+    "lines": 27,
+    "min": 0.638,
+    "median": 0.661,
+    "max": 0.677
+  },
+  {
+    "image": "idcard.jpg",
+    "lines": 27,
+    "min": 0.622,
+    "median": 0.64,
+    "max": 0.676
+  },
+  {
+    "image": "zh_test.png",
+    "lines": 6,
+    "min": 0.708,
+    "median": 0.735,
+    "max": 0.785
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "image": "example1.png",
+    "sec": 0.735,
+    "peak_rss_mb": 138.1
+  },
+  {
+    "image": "zh_test.png",
+    "sec": 0.731,
+    "peak_rss_mb": 203.5
+  },
+  {
+    "image": "big_2400",
+    "sec": 1.294,
+    "peak_rss_mb": 286.1
+  },
+  {
+    "image": "big_3600",
+    "sec": 1.375,
+    "peak_rss_mb": 315.4
+  }
+]
