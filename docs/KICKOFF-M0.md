@@ -2,14 +2,14 @@
 
 > 用法：新建对话后，把下面【短版】那段发出去即可——它会让新会话自己读本文件。
 > 本文件（全文）自带全部前置事实，新会话不需要看历史记录。
-> 最后更新：2026-11-15，对应 PRD v1.3、仓库 `ferroocr/` 现状。
+> 最后更新：2026-11-15，对应 PRD v1.3、仓库根 `D:\Codes\FerroOCR`（已托管于 GitHub）。
 
 ---
 
 ## 【短版】直接复制粘贴这段
 
 ```
-在仓库根目录（本文档位于 ferroocr/docs/）下
+在仓库根目录 `D:\Codes\FerroOCR` 下
 开始 FerroOCR 的正式开发，本轮只做 M0（一次性 CLI，L0）。
 
 开工前先读这三个文件（按顺序），读完再动手：
@@ -27,6 +27,8 @@ frame 字段、补上 ok / elapsed_ms / image / text 外层；--help 列出全�
 - 只出一个 exe；不引 tokio / tiny_http / interprocess / 任何 async runtime
 - 本轮不做 HTTP、Named Pipe、常驻、模型内嵌、ORT/DirectML、任何 SDK
 - ops_bash 是 GBK 控制台：写含中文的文件必须用 write 工具，别用 heredoc
+- spike/upstream/target 已随仓库迁移丢弃，开工前先跑一次 cargo build 重建
+  （约 1m50s；首次会联网补 getrandom 等缺失 crate）
 
 完成后给我：--help 真实输出、一次真实识别的完整 JSON、exe 体积、clippy 结果。
 ```
@@ -116,13 +118,17 @@ frame 字段、补上 ok / elapsed_ms / image / text 外层；--help 列出全�
 ## 4. 仓库现状（2026-11-15 实测，请以此为准）
 
 ```
-ferroocr/
+D:\Codes\FerroOCR\                # 仓库根（就是 ferroocr 本身，不是子目录）
+├── .git/                          # 已在 GitHub：shanhaishi/FerroOCR，分支 main
+├── .gitignore                     # 已忽略 target/、spike/upstream/、*.rten、*.exe
+├── LICENSE                        # MIT
 ├── Cargo.toml                     # workspace，members=["crates/ferroocr-cli"]，exclude=["spike/upstream"]
 ├── README.md                      # 165 行
 ├── crates/ferroocr-cli/
 │   └── Cargo.toml                 # 有 manifest，[[bin]] name="ferroocr" path="src/main.rs"
 │                                  # ❌ 但 src/ 目录不存在 —— M0 只落了 manifest，由 M0 补齐
-├── docs/PRD-FerroOCR.md           # 788 行 / 62013 字节，v1.3，需求唯一权威
+├── docs/PRD-FerroOCR.md           # 789 行，v1.3，需求唯一权威
+├── docs/adr/                      # 五条架构决策记录（为什么这么定）
 ├── docs/archive/                  # 四份历史 PRD（v0.5/v1.0/v1.1/v1.2），只作考古
 ├── docs/KICKOFF-M0.md             # 本文件
 ├── research/01-rusto-rs-技术分析.md
@@ -133,14 +139,19 @@ ferroocr/
     ├── models/ppocrv6_dict.txt          27156 B  sha256 前缀 c5cbe34ef40c29c4
     ├── zh_test.png                     测试图（6 行中文，机动车驾驶证）
     ├── bench.py / bench_mem.py / bench_result.json / bench_mem.json
-    └── upstream/                       245MB 完整克隆（含已构建的 rusto.exe）
+    └── upstream/                       上游完整克隆（gitignored，245MB，不含 target）
 ```
 
-**`ferroocr/` 目前不是 git 仓库**，没有 `.gitignore`。开工第一件事建议 `git init`（别忘了忽略 `spike/upstream/`、`spike/upstream/target/`、`target/`）。
+**仓库已是 git 仓库并已推送到 GitHub**（`origin` = https://github.com/shanhaishi/FerroOCR.git，分支 `main`，两个提交）。
+`.gitignore` 已就位：`spike/upstream/`、`**/target/`、`*.rten`/`*.mnn`/`*.onnx`、`*.exe`/`*.dll` 都不入库。
+
+> ⚠️ **`spike/upstream/target/` 在迁移时被丢弃了**（旧产物内嵌了旧绝对路径，不可复用）。
+> 开工第一件事是 `cd spike/upstream && cargo build --release --bin rusto`（约 1m50s，产出 2695680 字节的 `rusto.exe`），
+> 否则 §5.5 的基线命令跑不起来。
 
 ### 4.1 现有 manifest 内容（已可用）
 
-`ferroocr/Cargo.toml`：
+仓库根 `Cargo.toml`：
 
 ```toml
 [workspace]
@@ -164,15 +175,16 @@ panic = "unwind"
 
 > 上游自己的 release profile 是 `opt-level="z"` + `panic="abort"`，我们作为外部依赖时以本 workspace 的 profile 为准，这是有意为之。
 
-`ferroocr/crates/ferroocr-cli/Cargo.toml`：`[[bin]] name="ferroocr" path="src/main.rs"`，依赖 `rusto-rs = { path = "../../spike/upstream", default-features = false, features = ["parallel"] }`（发布前改为 git 依赖）。
+`crates/ferroocr-cli/Cargo.toml`：`[[bin]] name="ferroocr" path="src/main.rs"`，依赖 `rusto-rs = { path = "../../spike/upstream", default-features = false, features = ["parallel"] }`（发布前改为 git 依赖）。
 
 ### 4.2 上游克隆状态
 
-- 路径：`ferroocr/spike/upstream/`，分支 `main`
+- 路径：`spike/upstream/`（在仓库根下），分支 `main`
 - HEAD = `731c3f44a5a6`，提交时间 `2026-11-14T11:57:39+07:00`
 - **没有任何 git tag**（`git tag` 输出为空）→ 锁版本只能用 `rev = "731c3f44a5a6…"`，**不能写 `tag = "v0.4.1"`**
 - 它自己的 `Cargo.toml` 里 version 已是 **0.4.1**（PRD 里写的 v0.4.0 是过时的）
 - 已构建产物：`spike/upstream/target/release/rusto.exe` = **2695680 字节（2.57 MB）**——这是 Windows MSVC release 实测值，可直接当体积基准
+- ⚠️ 该 `target/` 目录在迁移时已被删除，**需要先重新构建**（见 §4 末尾的警告）
 
 ---
 
@@ -187,7 +199,7 @@ error: multiple workspace roots found in the same workspace:
   .../ferroocr/spike/upstream 与 .../ferroocr
 ```
 
-修法就是在 `ferroocr/Cargo.toml` 里加 `exclude = ["spike/upstream"]`（已加）。**不要为了"干净"删掉它。**
+修法就是在仓库根 `Cargo.toml` 里加 `exclude = ["spike/upstream"]`（已加）。**不要为了"干净"删掉它。**
 
 ### 5.2 依赖缓存与网络
 
@@ -244,7 +256,7 @@ error: multiple workspace roots found in the same workspace:
 ### 5.5 已验证的基线（可复现，用来对齐输出）
 
 ```bash
-cd ferroocr/spike
+cd spike
 ./upstream/target/release/rusto.exe ocr zh_test.png \
   --det-model models/ppocrv6-tiny_det.rten \
   --rec-model models/ppocrv6-tiny_rec.rten \

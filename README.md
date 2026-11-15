@@ -2,7 +2,9 @@
 
 > **FerroOCR（铁识）** —— Windows 上的「附属式」本地 OCR 组件：**一个 exe**，四级接入阶梯，开箱即用，静默运行。
 >
-> 当前阶段：**需求阶段（v1.3 草案，待评审）**
+> 当前阶段：**M0 待开发** —— 需求已定稿（PRD v1.3），五条架构决策已记录，仓库已建；代码只落了 workspace 与 crate manifest，`src/main.rs` 尚未编写。
+>
+> 下一步：按 [docs/KICKOFF-M0.md](docs/KICKOFF-M0.md) 实现 L0 一次性 CLI。
 
 ---
 
